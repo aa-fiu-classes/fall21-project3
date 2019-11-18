@@ -1,0 +1,9 @@
+pox.hpp
+pox.cpp
+.DS*
+router
+*.o
+*.dSYM
+.vagrant
+__pycache__
+*.pyc
