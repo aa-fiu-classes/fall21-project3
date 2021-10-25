@@ -13,6 +13,8 @@
 # If not, see <http://www.gnu.org/licenses/>.
 
 from router_base import ArpCacheBase
+from router_base.headers import *
+import time
 
 MAX_SENT_TIME = 5
 
@@ -25,58 +27,63 @@ class ArpCache(ArpCacheBase):
         super().__init__()
         self.router = router
 
-    def handleArpRequest(self): # add more params as needed
+    def handleIncomingArpReply(self, arpHeader): # add more params as needed
         '''
         IMPLEMENT THIS METHOD
 
-        This method should handle sending ARP requests if necessary.
-        The high-level logic:
-
-            if now - req->timeSent > seconds(1)
-                if req->nTimesSent >= 5:
-                    send icmp host unreachable to source addr of all pkts waiting
-                      on this request
-                    cache.removeRequest(req)
-                else:
-                    send arp request
-                    req->timeSent = now
-                    req->nTimesSent++
-        '''
-
-        pass
-
-    def handleArpReply(self): # add more params as needed
-        '''
-        IMPLEMENT THIS METHOD
+        YOU NEED TO CALL THIS METHOD FROM YOUR ROUTER IMPLEMENTATION
 
         The ARP reply processing code should move entries from the ARP request
         queue to the ARP cache:
 
+            # Lookup request using the decoded arpHeader
+
             # When servicing an arp reply that gives us an IP->MAC mapping
             req = cache.insertArpEntry(ip, mac)
 
-            if req != nullptr:
+            if req:
                 send all packets on the req->packets linked list
                 cache.removeRequest(req)
         '''
 
         pass
 
-    def periodicCheckArpRequestsAndCacheEntries(self):
+    def resendOrRemoveQueuedRequest(self, req):
         '''
         IMPLEMENT THIS METHOD
 
-        This method gets called every second. For each request sent out,
-        you should keep checking whether to resend a request or remove it.
+        This method is automatically called every second
 
-        Your implementation should follow the following logic
+        This method should handle sending ARP requests if necessary.
+        The high-level logic:
 
-            for each request in queued requests:
-                handleRequest(request)
-
-            for each cache entry in entries:
-                if not entry->isValid
-                    record entry for removal
-            remove all entries marked for removal
+            if now - req.timeSent > 1 # seconds
+                if req.nTimesSent >= 5:
+                    send icmp host unreachable to source addr of all pkts waiting
+                      on this request
+                    cache.removeRequest(req)
+                else:
+                    send arp request
+                    req.timeSent = time.time()
+                    req.nTimesSent++
         '''
+
         pass
+
+    def periodicCheckArpRequestsAndCacheEntries(self):
+        '''
+        This method is called every second. For each request sent out,
+        it calls out a method you need to implement to check whether
+        to re-send or remove the request, and then cleans up no longer valid
+        entries in the ARP cache.
+        '''
+        for request in self.arpRequests:
+            self.resendOrRemoveQueuedRequest(request)
+
+        entriesToRemove = []
+        for entry in self.cacheEntries:
+            if not entry->isValid:
+                entriesToRemove.append(entry)
+
+        for entry in entriesToRemove:
+            self.cacheEntries.remove(entry)
