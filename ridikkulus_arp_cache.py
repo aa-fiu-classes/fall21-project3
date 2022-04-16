@@ -82,7 +82,7 @@ class ArpCache(ArpCacheBase):
 
         entriesToRemove = []
         for entry in self.cacheEntries:
-            if not entry->isValid:
+            if not entry.isValid:
                 entriesToRemove.append(entry)
 
         for entry in entriesToRemove:

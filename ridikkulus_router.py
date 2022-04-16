@@ -66,9 +66,9 @@ class SimpleRouter(SimpleRouterBase):
         # need to check those, if any question
 
         if etherHeader.type == 0x0806:
-            self.processArp(self, restOfPacket, etherHeader, iface)
+            self.processArp(restOfPacket, etherHeader, iface)
         elif etherHeader.type == 0x0800:
-            self.processIp(self, restOfPacket, iface)
+            self.processIp(restOfPacket, iface)
         else
             # ignore packets that neither ARP nor IP
             pass
@@ -86,9 +86,9 @@ class SimpleRouter(SimpleRouterBase):
         What needs to be implemented here:
         - decode ARP header
         - check if ARP is request (somebody is asking) or reply (sombody is replying to your request)
-        - if request, need to check if somebody asking about YOUR IP.  For this, extract IP
-          address from the ARP request and call   self.findIfaceByIp() method to find a local interface
-          that corresponds to this IP.  If no IP found, then request is not for you and should be ignored.
+        - if request, need to check if the request is for the IP address of the interface
+          the request was received:  `aprPacket.tip == iface.ip`.  If no match, then the request is not for 
+          you and should be ignored.
         - if it is response, then you should decode and call self.arpCache.handleIncomingArpReply()
         '''
         pass
